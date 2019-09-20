@@ -233,9 +233,9 @@ def _is_changed(local, remote):
 def command_init(args):
     remote_monitors = [m['obj'] for m in get_datadog_monitors().values()]
     monitors = {'alerts': remote_monitors}
-    print '# team: TEAMNAME'
-    print
-    print _pretty_yaml(monitors)
+    print('# team: TEAMNAME')
+    print()
+    print(_pretty_yaml(monitors))
 
 
 def command_push(args):
@@ -244,7 +244,7 @@ def command_push(args):
 
     only_local = set(local_monitors.keys()) - set(remote_monitors.keys())
     if only_local:
-        print "Pushing %d new monitors." % len(only_local)
+        print(f"Pushing {len(only_local)} new monitors.")
         for name in only_local:
             datadog.api.Monitor.create(**_prepare_monitor(local_monitors[name]))
 
@@ -252,7 +252,7 @@ def command_push(args):
     changed = [name for name in common_names
                if _is_changed(local_monitors[name], remote_monitors[name])]
     if changed:
-        print "Updating %d modified monitors." % len(changed)
+        print(f"Updating {len(changed)} modified monitors.")
         for name in changed:
             datadog.api.Monitor.update(
                 remote_monitors[name]['id'],
@@ -262,7 +262,7 @@ def command_push(args):
         remote_monitors = get_datadog_monitors()
         untracked = set(remote_monitors.keys()) - set(local_monitors.keys())
         if untracked:
-            print "Deleting %d untracked monitors." % len(untracked)
+            print(f"Deleting {len(untracked)} untracked monitors.")
             for monitor in untracked:
                 datadog.api.Monitor.delete(remote_monitors[monitor]['id'])
 
@@ -309,14 +309,13 @@ def command_mute(args):
         if monitor['mute_when'] and remote_monitors.has_key(monitor['name']):
             remote = remote_monitors[monitor['name']]
             if remote['is_silenced']:
-                print "Alert '%s' is already muted. Skipping." % monitor['name']
+                print(f"Alert '{monitor['name']}' is already muted. Skipping.")
                 continue
             mute_until = mute_tags[monitor['mute_when']]
             if mute_until:
                 id = remote['id']
                 datadog.api.Monitor.mute(id, end=mute_until['timestamp'])
-                print "Muting alert '%s' until %s" % (monitor['name'],
-                                                      mute_until['datetime'])
+                print(f"Muting alert '{monitor['name']}' until {mute_until['datetime']}")
 
 
 def command_diff(args):
@@ -332,21 +331,21 @@ def command_diff(args):
 
     if only_local:
         sys.stdout.write(bcolors.WARNING)
-        print '---------------------------------------------------------'
-        print ' NEW MONITORS.  These monitors are currently missing in'
-        print ' datadog and can be pushed using "%s push"' % PROGNAME
-        print '---------------------------------------------------------'
+        print('---------------------------------------------------------')
+        print(' NEW MONITORS.  These monitors are currently missing in')
+        print(f' datadog and can be pushed using "{PROGNAME} push"')
+        print('---------------------------------------------------------')
         sys.stdout.write(bcolors.ENDC)
         monitors = [local_monitors[name]['obj'] for name in only_local]
-        print _pretty_yaml(monitors)
+        print(_pretty_yaml(monitors))
     if changed:
         sys.stdout.write(bcolors.WARNING)
-        print '---------------------------------------------------------'
-        print ' TO BE UPDATED.  These monitors exist in datadog, but are'
-        print ' different than the local version.  Use "%s push"' % PROGNAME
-        print ' to push them to datadog.'
-        print '---------------------------------------------------------'
-        print
+        print('---------------------------------------------------------')
+        print(' TO BE UPDATED.  These monitors exist in datadog, but are')
+        print(f' different than the local version.  Use "{PROGNAME} push"')
+        print(' to push them to datadog.')
+        print('---------------------------------------------------------')
+        print()
         sys.stdout.write(bcolors.ENDC)
         for name in changed:
             remote_name = 'datadog:%s' % name
@@ -365,16 +364,16 @@ def command_diff(args):
                     sys.stdout.write(line)
     if only_remote and not args.ignore_untracked:
         sys.stdout.write(bcolors.WARNING)
-        print '------------------------------------------------------------'
-        print ' UNTRACKED MONITORS.  These monitors are only in datadog    '
-        print ' and needed to be MANUALLY added to a local file or removed '
-        print ' from datadog.                                              '
-        print '------------------------------------------------------------'
+        print('------------------------------------------------------------')
+        print(' UNTRACKED MONITORS.  These monitors are only in datadog    ')
+        print(' and needed to be MANUALLY added to a local file or removed ')
+        print(' from datadog.                                              ')
+        print('------------------------------------------------------------')
         sys.stdout.write(bcolors.ENDC)
         monitors = [remote_monitors[name]['obj'] for name in only_remote]
-        print _pretty_yaml(monitors)
+        print(_pretty_yaml(monitors))
         sys.stdout.write(bcolors.FAIL)
-        print "*** FAILED *** Untracked monitors found."
+        print("*** FAILED *** Untracked monitors found.")
         sys.stdout.write(bcolors.ENDC)
     if args.exit_status and any((only_local, changed, only_remote and not args.ignore_untracked)):
         sys.exit(1)
