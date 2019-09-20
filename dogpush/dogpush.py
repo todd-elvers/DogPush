@@ -120,7 +120,7 @@ def _canonical_monitor(original, default_team=None, **kwargs):
     team = original_team if original_team is not None else default_team
     severity = original.get('severity') or 'CRITICAL'
     if team:
-        if isinstance(team, basestring):
+        if isinstance(team, str):
             team = [team]
         m['message'] = m.get('message', '')
         for t in team:
@@ -177,7 +177,7 @@ def _check_monitor_names_unique(monitors):
 
 def _check_monitor(monitor, location):
     name = monitor.get('name', '')
-    if isinstance(name, basestring):
+    if isinstance(name, str):
         name = name.strip()
     if not name:
         raise DogPushException('%s: found monitor without a name' % location)
